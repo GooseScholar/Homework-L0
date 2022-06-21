@@ -1,0 +1,21 @@
+version: '3.1'
+services:
+  db:
+    image: postgres:13.7-alpine
+    container_name: db
+    restart: always
+    ports:
+      - ${postgresPORT}
+    volumes:
+      - ./pg-data:/var/lib/postgesql/data/pgdata
+    environment:
+      POSTGRES_PASSWORD: ${postgresPassword} 
+      POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgesql/data/pgdata
+  nats_str:
+    image: nats_streaming:0.24.6-scratch
+    container_name: nats_str
+    build: ./nats-str
+    ports:
+      - ${natsStrPort1}
+      - ${natsStrPort2}

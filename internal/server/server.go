@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"homework-l0/internal/app"
+	"homework-l0/internal/cache"
 	"homework-l0/internal/database"
 	"io"
 	"log"
@@ -14,23 +14,22 @@ import (
 
 type httpServer struct {
 	repo  Repository
-	cache app.Cache
+	cache cache.Cache
 }
 
 //_ = products.NewHttpServer(ctx)
 
-func NewHttpServer(ctx context.Context, repo *database.DB, cache *app.Cache) *httpServer {
+func NewHttpServer(ctx context.Context, repo *database.DB, cache *cache.Cache) *httpServer {
 	ServerMux := http.NewServeMux()
 
 	ServerMux.HandleFunc("/postgres", func(w http.ResponseWriter, r *http.Request) {
-		idStrs, ok := r.URL.Query()["id"]
-		if !ok {
-			io.WriteString(w, "Missing query parameter <id>")
-		}
+		log.Println("Зашли")
+		r.ParseForm()
 
-		id := idStrs[0]
+		id := r.FormValue("id")
 		if len(id) < 1 {
 			io.WriteString(w, "Incorrect query parameter <id>")
+			return
 		}
 
 		if cached, found := cache.GetOrder(id); found == false {
@@ -47,19 +46,28 @@ func NewHttpServer(ctx context.Context, repo *database.DB, cache *app.Cache) *ht
 				return
 			}
 
+			cache.Data[order.Order_uid] = string(jsn)
+
 			io.WriteString(w, fmt.Sprintf("Not found in cache: %v", jsn))
 
 		} else {
-			io.WriteString(w, fmt.Sprintf("Found in cache: %v", cached))
+			pref := `<form action="/postgres" method="get">
+			<input name="id" type="text">
+			<button>Показать</button>
+		</form>
+		<div>`
+			suff := `</div>`
+			io.WriteString(w, fmt.Sprintf("%s%v%s", pref, cached, suff))
 		}
-		go func() {
-			err := http.ListenAndServe(":"+os.Getenv("portServer"), ServerMux)
-			if err != nil {
-				log.Println("Failed to listen" + os.Getenv("portServer"))
-			}
-		}()
 
 	})
+
+	go func() {
+		err := http.ListenAndServe(":"+os.Getenv("portServer"), ServerMux)
+		if err != nil {
+			log.Println("Failed to listen" + os.Getenv("portServer"))
+		}
+	}()
 
 	return &httpServer{
 		repo:  repo,

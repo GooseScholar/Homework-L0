@@ -8,11 +8,14 @@ import (
 	"os"
 	"os/signal"
 
+	"homework-l0/internal/cache"
+
 	"github.com/gofrs/uuid"
 	stan "github.com/nats-io/stan.go"
 )
 
-func Subscriber(ctx context.Context, repo *database.DB, cache *Cache) {
+//подключение и подкиска на канал в nats-streaming
+func Subscriber(ctx context.Context, repo *database.DB, cache *cache.Cache) {
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	var (
@@ -51,7 +54,7 @@ func Subscriber(ctx context.Context, repo *database.DB, cache *Cache) {
 			log.Printf("<%v>\n", cache.Data[message.Order_uid])
 			cache.PutOrder(message.Order_uid, string(msg.Data))
 			// log.Println("!!!в кеш положили!!!", cache.Data)
-			//err = repo.PutOrder(ctx, message)
+			err = repo.PutOrder(ctx, message)
 			//if err != nil {
 			//	log.Println("This order is already in the database")
 			//}

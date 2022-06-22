@@ -1,7 +1,8 @@
 -- +goose Up
 -- +goose StatementBegin
 SELECT 'up SQL query';
--- +goose StatementEnd
+-- +goose StatementEnd --order - primary key
+
 CREATE TABLE orders
 (
     order_uid VARCHAR(32),
@@ -14,7 +15,8 @@ CREATE TABLE orders
     shardkey VARCHAR(16),
     sm_id int NOT NULL,
     date_created VARCHAR(32),
-    oof_shard VARCHAR(32)
+    oof_shard VARCHAR(32),
+    time_of_creation bigint NOT NULL
 );
 
 CREATE TABLE delivery
@@ -60,7 +62,9 @@ CREATE TABLE items
     "status" int NOT NULL
 );
 
-
+CREATE USER homework
+LOGIN
+PASSWORD 'homework1';
 
 
 -- +goose Down
@@ -69,8 +73,10 @@ SELECT 'down SQL query';
 -- +goose StatementEnd
 DROP TABLE orders;
 
-CREATE TABLE delivery;
+DROP TABLE delivery;
 
 DROP TABLE payment;
 
 DROP TABLE items;
+
+DROP USER homework;

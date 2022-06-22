@@ -39,7 +39,7 @@ func main() {
 
 	// Publish some messages, synchronously
 	//var i int64
-	test1 := `{"order_uid": "b563feb7b2b84b6test", 
+	test1 := `{"order_uid": "test2", 
 	"track_number": "WBILMTESTTRACK", 
 	"entry": "WBIL",
 	"delivery": {

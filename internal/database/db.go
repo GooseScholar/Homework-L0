@@ -10,6 +10,7 @@ type DB struct {
 	pool *pgxpool.Pool
 }
 
+//const dsn = "host=localhost port=5432 user=homework password=homework1 dbname=postgres sslmode=disable"
 const dsn = "host=localhost port=5432 user=postgres password=qwerty1 dbname=postgres sslmode=disable"
 
 func NewDB(ctx context.Context) (*DB, error) {

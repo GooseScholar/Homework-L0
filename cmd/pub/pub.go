@@ -14,7 +14,6 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	var (
-		//url       = flag.String("url", stan.DefaultNatsURL, "NATS Server URLs, separated by commas")
 		clusterID = flag.String("cluster_id", "test-cluster", "Cluster ID")
 		clientID  = flag.String("client_id", "", "Client ID")
 	)
@@ -38,8 +37,7 @@ func main() {
 	defer sc.Close()
 
 	// Publish some messages, synchronously
-	//var i int64
-	test1 := `{"order_uid": "test3", 
+	test1 := `{"order_uid": "test4", 
 	"track_number": "WBILMTESTTRACK", 
 	"entry": "WBIL",
 	"delivery": {
@@ -88,7 +86,7 @@ func main() {
 	"oof_shard": "1"
   }`
 
-	test2 := `{"order_uid": "test3", 
+	test2 := `{"order_uid": "test5", 
 	"track_number": "WBILMTESTTRACK", 
 	"entry": "WBIL",
 	"delivery": {
@@ -143,10 +141,6 @@ func main() {
 
 	test5 := `264gfdg43g4d4t34`
 
-	//for {
-	//i++
-	//now := time.Now().Format(time.RFC3339)
-	//payload := fmt.Sprintf("%08d %s", i, now)
 	log.Println("start writing")
 	err = sc.Publish("ECHO", []byte(test1))
 	if err != nil {
@@ -168,7 +162,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Sleep for a random time of up to 1s
+
 	time.Sleep(time.Duration(rand.Int63n(1000)) * time.Millisecond)
-	//}
+
 }

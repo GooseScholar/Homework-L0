@@ -62,9 +62,10 @@ CREATE TABLE items
     "status" int NOT NULL
 );
 
-CREATE USER homework
-LOGIN
+CREATE USER homework LOGIN
 PASSWORD 'homework1';
+
+GRANT insert, select  ON delivery, items, orders, payment TO PUBLIC;
 
 
 -- +goose Down

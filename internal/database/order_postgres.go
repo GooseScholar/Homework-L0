@@ -15,12 +15,7 @@ import (
 //Запись новых даных в бд
 func (db *DB) PutOrder(ctx context.Context, ord *models.Orders) (err error) {
 
-	//tx, err := db.pool.Begin(ctx)
 	tx, err := db.pool.BeginTx(ctx, pgx.TxOptions{})
-
-	log.Printf("tx %v\n", tx)
-
-	//b := &pgx.Batch{}
 
 	query := `
 		INSERT INTO orders
@@ -131,7 +126,7 @@ func (db *DB) PutOrder(ctx context.Context, ord *models.Orders) (err error) {
 	return
 }
 
-//Получение новых данных из бд
+//Получение данных из бд
 func (db *DB) GetOrder(ctx context.Context, order_uid string) (ord *models.Orders, err error) {
 
 	ord = new(models.Orders)
@@ -246,6 +241,7 @@ func (db *DB) GetOrder(ctx context.Context, order_uid string) (ord *models.Order
 
 }
 
+//Восстановление Кеша из бд (все данные не старше 24 часов)
 func (db *DB) GetInitialCache(ctx context.Context) (*cache.Cache, error) {
 	cache := cache.NewCache()
 
@@ -260,10 +256,10 @@ func (db *DB) GetInitialCache(ctx context.Context) (*cache.Cache, error) {
 
 	rows, err := db.pool.Query(ctx, query, now-60*60*24)
 	defer rows.Close()
-	log.Printf("Зашли   GetInitialCache 1: %v", err)
+
 	//нахождение всех заказов
 	for rows.Next() {
-		log.Printf("Зашли   GetInitialCache 2: %v", err)
+
 		var order_uid *string
 		err = rows.Scan(
 			&order_uid,
@@ -274,7 +270,6 @@ func (db *DB) GetInitialCache(ctx context.Context) (*cache.Cache, error) {
 			return cache, err
 		}
 		forCache = append(forCache, *order_uid)
-		log.Printf("forCache: %v", forCache)
 	}
 
 	//get и marshal одной записи для кеша
@@ -292,53 +287,3 @@ func (db *DB) GetInitialCache(ctx context.Context) (*cache.Cache, error) {
 
 	return cache, nil
 }
-
-//`SELECET orders max(time) - mid(time)`
-/*
-for rows.Next() {
-	u := models.User{}
-	err = rows.Scan(
-		&u.Id,
-		&u.Name,
-		&u.Rating,
-		&u.Rank,
-		&u.Streak,
-	)
-
-	if err != nil {
-		return
-	}
-
-	board = append(board, u)
-}
-*/
-/*
-	db.pool.Exec(`INSERT INTO orders(order_uid, track_number, entry, locale, internal_signature,
-		customer_id, delivery_service, shardkey, sm_id, date_created, oof_shard)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);`)
-
-	   	query := `
-	   	INSERT INTO orders
-	   		(order_uid, track_number, entry, locale, internal_signature,customer_id,
-	   		delivery_service, shardkey, sm_id, date_created, oof_shard, time_of_creation)
-	   	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);
-	   `
-
-	   	_, err = db.pool.Exec(ctx, query,
-	   		ord.Order_uid,
-	   		ord.Track_number,
-	   		ord.Entry,
-	   		ord.Locale,
-	   		ord.Internal_signature,
-	   		ord.Customer_id,
-	   		ord.Delivery_service,
-	   		ord.Shardkey,
-	   		ord.Sm_id,
-	   		ord.Date_created,
-	   		ord.Oof_shard,
-	   		time.Now().Unix())
-
-	   	log.Printf("err exec %v", err)
-*/
-
-//http://localhost:8080/postgres?id=b563feb7b2b84b6test

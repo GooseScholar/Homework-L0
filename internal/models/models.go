@@ -20,7 +20,6 @@ type Orders struct {
 }
 
 type Delivery struct {
-	//Order_uid string `json:"order_uid" db:"order_uid"`
 	Name    string `json:"name" db:"name"`
 	Phone   string `json:"phone" db:"phone"`
 	Zip     string `json:"zip" db:"zip"`
@@ -31,7 +30,6 @@ type Delivery struct {
 }
 
 type Payment struct {
-	//Order_uid     string `json:"order_uid" db:"order_uid"`
 	Transaction   string `json:"transaction" db:"transaction"`
 	Request_id    string `json:"request_id" db:"request_id"`
 	Currency      string `json:"currency" db:"currency"`

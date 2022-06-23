@@ -22,13 +22,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("connect DB: <%v>", err)
 	}
-	log.Printf("стоим ньюкешем %v", err)
+
 	cache, err := repo.GetInitialCache(ctx)
-	if err != nil {
-		log.Fatalf("cache: <%v>", err)
-	}
-	log.Printf("стоим перед %v", err)
-	log.Printf("стоим после %v", err)
+
 	if err != nil {
 		log.Printf("recovery cache failed: <%v>", err)
 	}
@@ -41,13 +37,7 @@ func main() {
 
 	<-ctx.Done()
 	// Wait for Ctrl+C
-	/*	doneCh1 := make(chan bool)
-		go func() {
-			sigCh := make(chan os.Signal, 1)
-			signal.Notify(sigCh, os.Interrupt)
-			<-sigCh
-			doneCh1 <- true
-		}()
-		<-doneCh1
-	*/
+	//exit := make(chan os.Signal, 1)
+	//signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
+
 }

@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"log"
 	"sync"
 )
 
@@ -27,7 +28,7 @@ func (c *Cache) PutOrder(id string, o string) {
 func (c *Cache) GetOrder(id string) (o string, b bool) {
 	c.mx.RLock()
 	defer c.mx.RUnlock()
-	//log.Println("мы тут")
+	log.Println("мы тут")
 	o, b = c.Data[id]
 	//log.Println("мы тут2")
 	return

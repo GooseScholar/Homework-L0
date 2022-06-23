@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"errors"
 	"homework-l0/internal/models"
 	"log"
 	"time"
@@ -143,7 +142,7 @@ func (db *DB) GetOrder(ctx context.Context, order_uid string) (ord *models.Order
 		FROM orders o
 		WHERE o.order_uid = $1
 	`
-	log.Printf("get")
+	log.Printf("get orders")
 
 	err = db.pool.QueryRow(ctx, query, order_uid).Scan(
 		&ord.Order_uid,
@@ -160,18 +159,17 @@ func (db *DB) GetOrder(ctx context.Context, order_uid string) (ord *models.Order
 	)
 	log.Printf("%v", err)
 
-	if errors.Is(err, pgx.ErrNoRows) {
-		log.Printf("%v", err)
-	} else {
+	if err != nil {
+		log.Printf("from orders:%v", err)
 		return
 	}
 
 	query = `
 		SELECT name, phone, zip, city, address, region, email 
 		FROM delivery d
-		WHERE o.order_uid = $1
+		WHERE d.order_uid = $1
 	`
-	log.Printf("get2")
+	log.Printf("get delivery")
 	err = db.pool.QueryRow(ctx, query, order_uid).Scan(
 		&ord.Delivery.Name,
 		&ord.Delivery.Phone,
@@ -181,18 +179,18 @@ func (db *DB) GetOrder(ctx context.Context, order_uid string) (ord *models.Order
 		&ord.Delivery.Region,
 		&ord.Delivery.Email,
 	)
-	if errors.Is(err, pgx.ErrNoRows) {
-		err = nil
-	} else {
+
+	if err != nil {
+		log.Printf("from delivery:%v", err)
 		return
 	}
 
 	query = `
 		SELECT transaction, request_id, currency, provider, amount, payment_dt, bank, delivery_cost, goods_total, custom_fee 
 		FROM payment p
-		WHERE o.order_uid = $1;
+		WHERE p.order_uid = $1;
 	`
-	log.Printf("get3")
+	log.Printf("get payment")
 	err = db.pool.QueryRow(ctx, query, order_uid).Scan(
 		&ord.Payment.Transaction,
 		&ord.Payment.Request_id,
@@ -205,16 +203,16 @@ func (db *DB) GetOrder(ctx context.Context, order_uid string) (ord *models.Order
 		&ord.Payment.Goods_total,
 		&ord.Payment.Custom_fee,
 	)
-	if errors.Is(err, pgx.ErrNoRows) {
-		err = nil
-	} else {
+
+	if err != nil {
+		log.Printf("from payment:%v", err)
 		return
 	}
 
 	query = `
 		SELECT chrt_id, track_number, price, rid, name, sale, size, total_price, nm_id, brand, status 
 		FROM items i
-		WHERE o.order_uid = $1;
+		WHERE i.order_uid = $1;
 	`
 
 	rows, err := db.pool.Query(ctx, query, order_uid)
@@ -222,30 +220,29 @@ func (db *DB) GetOrder(ctx context.Context, order_uid string) (ord *models.Order
 
 	for rows.Next() {
 		item := new(models.Item)
-		log.Printf("get4")
+		log.Printf("get items")
 		err = rows.Scan(
-			item.Chrt_id,
-			item.Track_number,
-			item.Price,
-			item.Rid,
-			item.Name,
-			item.Sale,
-			item.Size,
-			item.Total_price,
-			item.Nm_id,
-			item.Brand,
-			item.Status,
+			&item.Chrt_id,
+			&item.Track_number,
+			&item.Price,
+			&item.Rid,
+			&item.Name,
+			&item.Sale,
+			&item.Size,
+			&item.Total_price,
+			&item.Nm_id,
+			&item.Brand,
+			&item.Status,
 		)
 
-		if errors.Is(err, pgx.ErrNoRows) {
-			err = nil
-		} else {
+		if err != nil {
+			log.Printf("from items:%v", err)
 			return
 		}
 		ord.Items = append(ord.Items, *item)
 	}
 
-	return
+	return ord, nil
 
 }
 
@@ -253,46 +250,44 @@ func (db *DB) GetInitialCache(ctx context.Context) (*cache.Cache, error) {
 	cache := cache.NewCache()
 
 	now := time.Now().Unix()
-	forCache := make([]string, 0, 1000)
+	forCache := make([]string, 0, 10)
 
 	query := `
 	SELECT order_uid
 	FROM orders o
-	WHERE o.time_of_creation > $1
+	WHERE o.time_of_creation > $1;
 	`
 
 	rows, err := db.pool.Query(ctx, query, now-60*60*24)
-	log.Printf("Зашли %v", err)
 	defer rows.Close()
-	log.Printf("Звшли 2: %v", err)
+	log.Printf("Зашли   GetInitialCache 1: %v", err)
 	//нахождение всех заказов
 	for rows.Next() {
-		log.Printf("Звшли 3: %v", err)
-		var order_uid string
+		log.Printf("Зашли   GetInitialCache 2: %v", err)
+		var order_uid *string
 		err = rows.Scan(
-			order_uid,
+			&order_uid,
 		)
 		log.Printf("Звшли 4: %v", err)
-		if errors.Is(err, pgx.ErrNoRows) {
-			err = nil
-		} else {
+		if err != nil {
+			log.Printf("failed cache %v", err)
 			return cache, err
 		}
-		forCache = append(forCache, order_uid)
+		forCache = append(forCache, *order_uid)
 		log.Printf("forCache: %v", forCache)
 	}
 
 	//get и marshal одной записи для кеша
-	for i, order_uid := range forCache {
+	for _, order_uid := range forCache {
 
 		ord, err := db.GetOrder(ctx, order_uid)
 
 		message, err := json.Marshal(ord)
 		if err != nil {
 			log.Printf("Marshal for cache <%v>", err)
+			return cache, err
 		}
 		cache.Data[order_uid] = string(message)
-		i++
 	}
 
 	return cache, nil
@@ -345,3 +340,5 @@ for rows.Next() {
 
 	   	log.Printf("err exec %v", err)
 */
+
+//http://localhost:8080/postgres?id=b563feb7b2b84b6test

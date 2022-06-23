@@ -16,7 +16,7 @@ import (
 
 //подключение и подкиска на канал в nats-streaming
 func Subscriber(ctx context.Context, repo *database.DB, cache *cache.Cache) {
-
+	log.Println("зашли в саб")
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	var (
 		//url        = flag.String("url", stan.DefaultNatsURL, "NATS Server URLs, separated by commas")
@@ -45,19 +45,17 @@ func Subscriber(ctx context.Context, repo *database.DB, cache *cache.Cache) {
 	// Subscribe to the ECHO channel as a queue.
 	// Start with new messages as they come in; don't replay earlier messages.
 	sub, err := sc.QueueSubscribe("ECHO", *queueGroup, func(msg *stan.Msg) {
+		log.Println("зашли в саб 2")
 		log.Printf("%10s | %s\n", msg.Subject, string(msg.Data))
 		message, err := ParseMessages(msg.Data)
 		if err != nil {
 			log.Println("no data")
 		} else {
-			log.Println("!!!анмарш прошел успешно!!!")
-			log.Printf("<%v>\n", cache.Data[message.Order_uid])
 			cache.PutOrder(message.Order_uid, string(msg.Data))
-			// log.Println("!!!в кеш положили!!!", cache.Data)
 			err = repo.PutOrder(ctx, message)
-			//if err != nil {
-			//	log.Println("This order is already in the database")
-			//}
+			if err != nil {
+				log.Println("This order is already in the database")
+			}
 		}
 	}, stan.StartWithLastReceived())
 	if err != nil {
@@ -76,4 +74,5 @@ func Subscriber(ctx context.Context, repo *database.DB, cache *cache.Cache) {
 		doneCh <- true
 	}()
 	<-doneCh
+
 }

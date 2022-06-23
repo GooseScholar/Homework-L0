@@ -1,11 +1,11 @@
 -- +goose Up
 -- +goose StatementBegin
 SELECT 'up SQL query';
--- +goose StatementEnd --order - primary key
+-- +goose StatementEnd
 
 CREATE TABLE orders
 (
-    order_uid VARCHAR(32),
+    order_uid VARCHAR(32) PRIMARY KEY,
     track_number VARCHAR(32),
     "entry" VARCHAR(16),
     locale VARCHAR(16),

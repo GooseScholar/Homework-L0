@@ -17,25 +17,39 @@ type httpServer struct {
 	cache cache.Cache
 }
 
-//_ = products.NewHttpServer(ctx)
-
 func NewHttpServer(ctx context.Context, repo *database.DB, cache *cache.Cache) *httpServer {
 	ServerMux := http.NewServeMux()
 
-	ServerMux.HandleFunc("/postgres", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Зашли")
+	ServerMux.HandleFunc("/orders", func(w http.ResponseWriter, r *http.Request) {
+
 		r.ParseForm()
 
 		id := r.FormValue("id")
 		if len(id) < 1 {
-			io.WriteString(w, "Incorrect query parameter <id>")
+			io.WriteString(w, `<!DOCTYPE html>
+			<form action="/orders" method="get">
+			Ввевидети ваш номер заказа:
+			<br>
+			<input name="id" type="text">
+			<br> 
+			<button type="submit">Показать</button>
+		</form>`)
 			return
 		}
 
 		if cached, found := cache.GetOrder(id); found == false {
 			order, err := repo.GetOrder(ctx, id)
 			if err != nil {
-				io.WriteString(w, fmt.Sprintf("Order <%s> not found", id))
+				io.WriteString(w, fmt.Sprintf(`<!DOCTYPE html>
+				<form action="/orders" method="get">
+				Ввевидети ваш номер заказа:
+				<br>
+				<input name="id" type="text">
+				<br> 
+				<button type="submit">Показать</button>
+			</form>
+			<div> "Order <%s> not found"
+			</div>`, id))
 				return
 			}
 
@@ -48,12 +62,29 @@ func NewHttpServer(ctx context.Context, repo *database.DB, cache *cache.Cache) *
 
 			cache.Data[order.Order_uid] = string(jsn)
 
-			io.WriteString(w, fmt.Sprintf("Not found in cache: %v", jsn))
+			//io.WriteString(w, fmt.Sprintf("Not found in cache: %v", jsn))
+			pref := `<!DOCTYPE html>
+			<form action="/orders" method="get">
+			Ввевидети ваш номер заказа:
+			<br>
+			<input name="id" type="text">
+			<br> 
+			<button type="submit">Показать</button>
+		</form>
+		<div>`
+			suff := `</div>`
+			io.WriteString(w, fmt.Sprintf("%s%v%s", pref, string(jsn), suff))
+
+			//cache.GetOrder(id)
 
 		} else {
-			pref := `<form action="/postgres" method="get">
+			pref := `<!DOCTYPE html>
+			<form action="/orders" method="get">
+			Ввевидети ваш номер заказа:
+			<br>
 			<input name="id" type="text">
-			<button>Показать</button>
+			<br> 
+			<button type="submit">Показать</button>
 		</form>
 		<div>`
 			suff := `</div>`

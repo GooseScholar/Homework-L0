@@ -6,6 +6,8 @@ import (
 	"homework-l0/internal/database"
 	"homework-l0/internal/server"
 	"log"
+	"os/signal"
+	"syscall"
 
 	"github.com/joho/godotenv"
 )
@@ -18,6 +20,10 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// Wait for Ctrl+C
+	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	repo, err := database.NewDB(ctx)
 	if err != nil {
 		log.Fatalf("connect DB: <%v>", err)
@@ -29,15 +35,10 @@ func main() {
 		log.Printf("recovery cache failed: <%v>", err)
 	}
 
-	//service := service.New(db)
-
 	server.NewHttpServer(ctx, repo, cache)
 
 	app.Subscriber(ctx, repo, cache)
 
 	<-ctx.Done()
-	// Wait for Ctrl+C
-	//exit := make(chan os.Signal, 1)
-	//signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
 
 }

@@ -44,7 +44,7 @@ func Subscriber(ctx context.Context, repo *database.DB, cache *cache.Cache) {
 	defer sc.Close()
 	// Subscribe to the ECHO channel as a queue.
 	// Start with new messages as they come in; don't replay earlier messages.
-	sub, err := sc.QueueSubscribe("ECHO", *queueGroup, func(msg *stan.Msg) {
+	Sub, err := sc.QueueSubscribe("ECHO", *queueGroup, func(msg *stan.Msg) {
 		log.Printf("%10s | %s\n", msg.Subject, string(msg.Data))
 		message, err := ParseMessages(msg.Data)
 		if err != nil {
@@ -69,7 +69,7 @@ func Subscriber(ctx context.Context, repo *database.DB, cache *cache.Cache) {
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, os.Interrupt)
 		<-sigCh
-		sub.Unsubscribe()
+		Sub.Unsubscribe()
 		doneCh <- true
 	}()
 	<-doneCh

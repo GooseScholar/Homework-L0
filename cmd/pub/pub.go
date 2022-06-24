@@ -36,7 +36,7 @@ func main() {
 	}
 	defer sc.Close()
 
-	// Publish some messages, synchronously
+	// Publish some messages
 	test1 := `{"order_uid": "test4", 
 	"track_number": "WBILMTESTTRACK", 
 	"entry": "WBIL",

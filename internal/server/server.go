@@ -62,7 +62,6 @@ func NewHttpServer(ctx context.Context, repo *database.DB, cache *cache.Cache) *
 
 			cache.Data[order.Order_uid] = string(jsn)
 
-			//io.WriteString(w, fmt.Sprintf("Not found in cache: %v", jsn))
 			pref := `<!DOCTYPE html>
 			<form action="/orders" method="get">
 			Ввевидети ваш номер заказа:
@@ -74,8 +73,6 @@ func NewHttpServer(ctx context.Context, repo *database.DB, cache *cache.Cache) *
 		<div>`
 			suff := `</div>`
 			io.WriteString(w, fmt.Sprintf("%s%v%s", pref, string(jsn), suff))
-
-			//cache.GetOrder(id)
 
 		} else {
 			pref := `<!DOCTYPE html>
